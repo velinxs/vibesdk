@@ -1,122 +1,130 @@
-import { createLogger } from './logger';
-import { SmartCodeGeneratorAgent } from './agents/core/smartGeneratorAgent';
-import { proxyToSandbox } from '@cloudflare/sandbox';
-import { isDispatcherAvailable } from './utils/dispatcherUtils';
-import { createApp } from './app';
-// import * as Sentry from '@sentry/cloudflare';
-// import { sentryOptions } from './observability/sentry';
-import { DORateLimitStore as BaseDORateLimitStore } from './services/rate-limit/DORateLimitStore';
-import { getPreviewDomain } from './utils/urls';
+import { Hono } from 'hono';
+import { z } from 'zod';
+import { EncounterSession, SessionError } from './session/EncounterSession';
+import type { CreateRunRequest } from 'shared/game/api-types';
+import { readConfig } from './env';
+import { AVATARS } from 'shared/game/content/scenarios';
+import { ROUTINES } from 'shared/game/content/routines';
 
-// Durable Object and Service exports
-export { UserAppSandboxService, DeployerService } from './services/sandbox/sandboxSdkClient';
+export { EncounterSession };
 
-// export const CodeGeneratorAgent = Sentry.instrumentDurableObjectWithSentry(sentryOptions, SmartCodeGeneratorAgent);
-// export const DORateLimitStore = Sentry.instrumentDurableObjectWithSentry(sentryOptions, BaseDORateLimitStore);
-export const CodeGeneratorAgent = SmartCodeGeneratorAgent;
-export const DORateLimitStore = BaseDORateLimitStore;
+const app = new Hono<{ Bindings: Env }>();
 
-// Logger for the main application and handlers
-const logger = createLogger('App');
+const createRunSchema = z.object({
+	runId: z.string().regex(/^[a-z0-9-]{8,64}$/),
+	difficulty: z.enum(['chad', 'normal', 'hard', 'epic']),
+	mode: z.enum(['practice', 'challenge']),
+	avatarId: z.string().refine((id) => Boolean(AVATARS[id]), 'Unknown avatar'),
+	equipped: z.array(z.string().refine((id) => Boolean(ROUTINES[id]))).max(4).default([]),
+	coachMuted: z.boolean().default(false),
+	masteryLevels: z.record(z.string(), z.number().min(0).max(3)).default({}),
+	seed: z.number().int().optional(),
+});
 
-/**
- * Handles requests for user-deployed applications on subdomains.
- * It first attempts to proxy to a live development sandbox. If that fails,
- * it dispatches the request to a permanently deployed worker via namespaces.
- * This function will NOT fall back to the main worker.
- *
- * @param request The incoming Request object.
- * @param env The environment bindings.
- * @returns A Response object from the sandbox, the dispatched worker, or an error.
- */
-async function handleUserAppRequest(request: Request, env: Env): Promise<Response> {
-	const url = new URL(request.url);
-	const { hostname } = url;
-	logger.info(`Handling user app request for: ${hostname}`);
+const turnSchema = z.object({
+	turnId: z.string().regex(/^[a-z0-9-]{8,64}$/),
+	stateVersion: z.number().int().min(0),
+	text: z.string().trim().min(1).max(600),
+});
 
-	// 1. Attempt to proxy to a live development sandbox.
-	// proxyToSandbox doesn't consume the request body on a miss, so no clone is needed here.
-	const sandboxResponse = await proxyToSandbox(request, env);
-	if (sandboxResponse) {
-		logger.info(`Serving response from sandbox for: ${hostname}`);
-		return sandboxResponse;
-	}
-
-	// 2. If sandbox misses, attempt to dispatch to a deployed worker.
-	logger.info(`Sandbox miss for ${hostname}, attempting dispatch to permanent worker.`);
-	if (!isDispatcherAvailable(env)) {
-		logger.warn(`Dispatcher not available, cannot serve: ${hostname}`);
-		return new Response('This application is not currently available.', { status: 404 });
-	}
-
-	// Extract the app name (e.g., "xyz" from "xyz.build.cloudflare.dev").
-	const appName = hostname.split('.')[0];
-	const dispatcher = env['DISPATCHER'];
-
-	try {
-		const worker = dispatcher.get(appName);
-		return await worker.fetch(request);
-	} catch (error: any) {
-		// This block catches errors if the binding doesn't exist or if worker.fetch() fails.
-		logger.warn(`Error dispatching to worker '${appName}': ${error.message}`);
-		return new Response('An error occurred while loading this application.', { status: 500 });
-	}
+function stub(env: Env, runId: string): DurableObjectStub<EncounterSession> {
+	const namespace = env.ENCOUNTER_SESSION as unknown as DurableObjectNamespace<EncounterSession>;
+	return namespace.get(namespace.idFromName(runId));
 }
 
-/**
- * Main Worker fetch handler with robust, secure routing.
- */
-const worker = {
-	async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
-		// --- Pre-flight Checks ---
+function errorResponse(error: unknown): Response {
+	if (error instanceof SessionError) {
+		return Response.json({ error: error.message, retryable: error.retryable }, { status: error.status });
+	}
+	if (error instanceof Error && /Run not found/.test(error.message)) {
+		return Response.json({ error: 'Run not found.', retryable: false }, { status: 404 });
+	}
+	if (error instanceof Error && /Stale state|conversation is over|already|No encounter|not a principal|in progress/.test(error.message)) {
+		return Response.json({ error: error.message, retryable: false }, { status: 409 });
+	}
+	if (error instanceof Error && /evaluator is unavailable/i.test(error.message)) {
+		return Response.json({ error: error.message, retryable: true }, { status: 503 });
+	}
+	console.error(error);
+	return Response.json({ error: 'Something went wrong on the server.', retryable: true }, { status: 500 });
+}
 
-		// 1. Critical configuration check: Ensure custom domain is set.
-        const previewDomain = getPreviewDomain(env);
-		if (!previewDomain || previewDomain.trim() === '') {
-			console.error('FATAL: env.CUSTOM_DOMAIN is not configured in wrangler.toml or the Cloudflare dashboard.');
-			return new Response('Server configuration error: Application domain is not set.', { status: 500 });
-		}
+app.get('/api/health', (c) => {
+	const config = readConfig(c.env);
+	const live = config.provider !== 'demo' && Boolean(c.env.AI);
+	return c.json({ ok: true, provider: live ? 'live' : 'demo', model: live ? config.workersAiActorModel : null });
+});
 
-		const url = new URL(request.url);
-		const { hostname, pathname } = url;
+app.post('/api/runs', async (c) => {
+	const body = createRunSchema.safeParse(await c.req.json().catch(() => null));
+	if (!body.success) {
+		return c.json({ error: 'Invalid run request.', issues: body.error.issues }, 400);
+	}
+	try {
+		const view = await stub(c.env, body.data.runId).create(body.data as CreateRunRequest);
+		return c.json(view);
+	} catch (error) {
+		return errorResponse(error);
+	}
+});
 
-		// 2. Security: Immediately reject any requests made via an IP address.
-		const ipRegex = /^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$/;
-		if (ipRegex.test(hostname)) {
-			return new Response('Access denied. Please use the assigned domain name.', { status: 403 });
-		}
+app.get('/api/runs/:runId', async (c) => {
+	try {
+		return c.json(await stub(c.env, c.req.param('runId')).get());
+	} catch (error) {
+		return errorResponse(error);
+	}
+});
 
-		// --- Domain-based Routing ---
+app.post('/api/runs/:runId/approach', async (c) => {
+	const body = z.object({ characterId: z.string().min(1).max(40) }).safeParse(await c.req.json().catch(() => null));
+	if (!body.success) {
+		return c.json({ error: 'Invalid approach request.' }, 400);
+	}
+	try {
+		return c.json(await stub(c.env, c.req.param('runId')).approach(body.data.characterId));
+	} catch (error) {
+		return errorResponse(error);
+	}
+});
 
-		// Normalize hostnames for both local development (localhost) and production.
-		const isMainDomainRequest =
-			hostname === env.CUSTOM_DOMAIN || hostname === 'localhost';
-		const isSubdomainRequest =
-			hostname.endsWith(`.${previewDomain}`) ||
-			(hostname.endsWith('.localhost') && hostname !== 'localhost');
+app.post('/api/runs/:runId/turn', async (c) => {
+	const body = turnSchema.safeParse(await c.req.json().catch(() => null));
+	if (!body.success) {
+		return c.json({ error: 'Invalid turn.', issues: body.error.issues }, 400);
+	}
+	try {
+		const result = await stub(c.env, c.req.param('runId')).turn(body.data.turnId, body.data.stateVersion, body.data.text);
+		return c.json(result);
+	} catch (error) {
+		return errorResponse(error);
+	}
+});
 
-		// Route 1: Main Platform Request (e.g., build.cloudflare.dev or localhost)
-		if (isMainDomainRequest) {
-			// Serve static assets for all non-API routes from the ASSETS binding.
-			if (!pathname.startsWith('/api/')) {
-				return env.ASSETS.fetch(request);
-			}
-			// Handle all API requests with the main Hono application.
-			logger.info(`Handling API request for: ${url}`);
-			const app = createApp(env);
-			return app.fetch(request, env, ctx);
-		}
+app.post('/api/runs/:runId/rewind', async (c) => {
+	const body = z.object({ turn: z.number().int().min(1) }).safeParse(await c.req.json().catch(() => null));
+	if (!body.success) {
+		return c.json({ error: 'Invalid rewind request.' }, 400);
+	}
+	try {
+		return c.json(await stub(c.env, c.req.param('runId')).rewind(body.data.turn));
+	} catch (error) {
+		return errorResponse(error);
+	}
+});
 
-		// Route 2: User App Request (e.g., xyz.build.cloudflare.dev or test.localhost)
-		if (isSubdomainRequest) {
-			return handleUserAppRequest(request, env);
-		}
+app.post('/api/runs/:runId/coach', async (c) => {
+	const body = z.object({ muted: z.boolean() }).safeParse(await c.req.json().catch(() => null));
+	if (!body.success) {
+		return c.json({ error: 'Invalid coach request.' }, 400);
+	}
+	try {
+		return c.json(await stub(c.env, c.req.param('runId')).setCoachMuted(body.data.muted));
+	} catch (error) {
+		return errorResponse(error);
+	}
+});
 
-		return new Response('Not Found', { status: 404 });
-	},
-} satisfies ExportedHandler<Env>;
+app.notFound((c) => c.json({ error: 'Not found.' }, 404));
 
-export default worker;
-
-// Wrap the entire worker with Sentry for comprehensive error monitoring.
-// export default Sentry.withSentry(sentryOptions, worker);
+export default app;

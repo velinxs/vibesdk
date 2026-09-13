@@ -1,28 +1,7 @@
-# Security Configuration
-#CUSTOM_DOMAIN="your-domain.com" # Your custom domain for CORS
-#ENVIRONMENT="prod" # Options: dev, staging, prod
+# Copy to .dev.vars for local development. Nothing here reaches the browser.
 
-# Essential Secrets:
-#CLOUDFLARE_AI_GATEWAY_TOKEN="" # If this has read and edit permissions, the AI Gateway will be created automatically. run is required at the least
-
-# Provider specific secrets:
-#ANTHROPIC_API_KEY=""
-#OPENAI_API_KEY=""
-GOOGLE_AI_STUDIO_API_KEY=""
-#OPENROUTER_API_KEY="default" 
-#GROQ_API_KEY="default" 
- 
-# Stuff for Oauths:
-#GOOGLE_CLIENT_SECRET=""
-#GOOGLE_CLIENT_ID="" 
-
-# GitHub OAuth
-#GITHUB_CLIENT_ID=""
-#GITHUB_CLIENT_SECRET=""
-
-# Secrets for various internal services of this platform
-JWT_SECRET="default" 
-WEBHOOK_SECRET="default" 
-
-# AI Gateway URL Override (Leave as-is if not going to set it)
-#CLOUDFLARE_AI_GATEWAY_URL=""
+# Provider for the evaluator and actor: workers-ai | demo
+# workers-ai uses the AI binding (Nemotron on Workers AI). Locally it needs `wrangler login`
+# because the AI binding runs remotely. demo is an authored fallback with no live model;
+# the HUD labels it as such.
+AI_PROVIDER=demo

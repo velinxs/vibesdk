@@ -1,19 +1,15 @@
-import { defineWorkersConfig } from '@cloudflare/vitest-pool-workers/config';
+import { defineConfig } from 'vitest/config';
+import path from 'node:path';
 
-export default defineWorkersConfig({
-  test: {
-    poolOptions: {
-      workers: {
-        wrangler: { configPath: './wrangler.test.jsonc' },
-        miniflare: {
-          compatibilityDate: '2024-12-12',
-          compatibilityFlags: ['nodejs_compat'],
-        },
-      },
-    },
-    globals: true,
-    setupFiles: ['./test/setup.ts'],
-    include: ['**/*.{test,spec}.{js,ts,jsx,tsx}'],
-    exclude: ['**/node_modules/**', '**/dist/**', '**/.git/**', '**/test/**', '**/worker/api/routes/**'],
-  },
+export default defineConfig({
+	resolve: {
+		alias: {
+			'@': path.resolve(import.meta.dirname, './src'),
+			shared: path.resolve(import.meta.dirname, './shared'),
+		},
+	},
+	test: {
+		include: ['shared/**/*.test.ts', 'worker/**/*.test.ts'],
+		environment: 'node',
+	},
 });

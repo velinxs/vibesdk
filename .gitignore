@@ -48,3 +48,7 @@ debug-tools/*.json
 # Sentry Config File
 .env.sentry-build-plugin
 data-dump
+# After Hours working folders
+.dream-loop/
+wrangler.demo.json
+worker-configuration.d.ts.bak

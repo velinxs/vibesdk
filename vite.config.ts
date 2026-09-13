@@ -1,89 +1,41 @@
-// import { sentryVitePlugin } from '@sentry/vite-plugin';
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
-import svgr from 'vite-plugin-svgr';
-import path from 'path';
-
 import { cloudflare } from '@cloudflare/vite-plugin';
-import tailwindcss from '@tailwindcss/vite';
-// import { nodePolyfills } from 'vite-plugin-node-polyfills';
+import path from 'node:path';
+import fs from 'node:fs';
 
-// https://vite.dev/config/
+/**
+ * AH_DEMO=1 runs the worker without the Workers AI binding so the authored
+ * demo mode works with no Cloudflare login. The demo config is derived from
+ * wrangler.jsonc at startup so the two never drift.
+ */
+function wranglerConfigPath(): string {
+	if (process.env.AH_DEMO !== '1') {
+		return 'wrangler.jsonc';
+	}
+	const source = fs.readFileSync(path.resolve(import.meta.dirname, 'wrangler.jsonc'), 'utf8');
+	const parsed = JSON.parse(source.replace(/^\s*\/\/.*$/gm, '')) as Record<string, unknown>;
+	delete parsed.ai;
+	parsed.vars = { ...(parsed.vars as Record<string, string>), AI_PROVIDER: 'demo' };
+	// Written next to wrangler.jsonc so the relative `main` path resolves the same way.
+	const target = path.resolve(import.meta.dirname, 'wrangler.demo.json');
+	fs.writeFileSync(target, JSON.stringify(parsed, null, 2));
+	return target;
+}
+
 export default defineConfig({
-	optimizeDeps: {
-		exclude: ['format', 'editor.all'],
-		include: ['monaco-editor/esm/vs/editor/editor.api'],
-		force: true, // Force re-optimization on every start
-	},
-
-	// build: {
-	//     rollupOptions: {
-	//       output: {
-	//             advancedChunks: {
-	//                 groups: [{name: 'vendor', test: /node_modules/}]
-	//             }
-	//         }
-	//     }
-	// },
-	plugins: [
-		react(),
-		svgr(),
-		cloudflare({
-			configPath: 'wrangler.jsonc',
-			experimental: { remoteBindings: true },
-		}), // Add the node polyfills plugin here
-		// nodePolyfills({
-		//     exclude: [
-		//       'tty', // Exclude 'tty' module
-		//     ],
-		//     // We recommend leaving this as `true` to polyfill `global`.
-		//     globals: {
-		//         global: true,
-		//     },
-		// })
-		tailwindcss(),
-		// sentryVitePlugin({
-		// 	org: 'cloudflare-0u',
-		// 	project: 'javascript-react',
-		// }),
-	],
-
+	plugins: [react(), cloudflare({ configPath: wranglerConfigPath() })],
 	resolve: {
 		alias: {
-			// 'path': 'path-browserify',
-			// Add this line to fix the 'debug' package issue
-			debug: 'debug/src/browser',
-			// "@": path.resolve(__dirname, "./src"),
-			'@': path.resolve(__dirname, './src'),
-            'shared': path.resolve(__dirname, './shared'),
-            'worker': path.resolve(__dirname, './worker'),
+			'@': path.resolve(import.meta.dirname, './src'),
+			shared: path.resolve(import.meta.dirname, './shared'),
 		},
 	},
-
-	// Configure for Prisma + Cloudflare Workers compatibility
-	define: {
-		// Ensure proper module definitions for Cloudflare Workers context
-		'process.env.NODE_ENV': JSON.stringify(
-			process.env.NODE_ENV || 'development',
-		),
-		global: 'globalThis',
-		// '__filename': '""',
-		// '__dirname': '""',
-	},
-
-	worker: {
-		// Handle Prisma in worker context for development
-		format: 'es',
-	},
-
 	server: {
 		allowedHosts: true,
 	},
-
-	// Clear cache more aggressively
-	cacheDir: 'node_modules/.vite',
-
 	build: {
-		sourcemap: true,
+		sourcemap: false,
+		chunkSizeWarningLimit: 1500,
 	},
 });
