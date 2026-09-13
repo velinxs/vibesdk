@@ -53,7 +53,7 @@ What was not exercised: a full multi-turn live playthrough through the deployed 
 
 Dream Loop was followed: a target image was generated from the brief's composition, the scene was built, and an independent judge scored live screenshots against it over several rounds. All geometry is procedural (no external assets were permitted or available; no image-to-3D or Blender in the environment). Textures and the skyline are generated images.
 
-The judge's scores stayed low (1.5/10 in round 6; see `.dream-loop/` locally for verdicts) because the target is photographic and the characters are stylized procedural figures. Composition, lighting direction, bar geometry, and the blue-hour backdrop moved toward the target across rounds; skin, hair, cloth, and facial realism did not reach it and will not without rigged character assets. This is the material limitation of the build.
+Independent judge scores against the target: 1.5/10 (round 6), 2.0/10 (round 10), 2.25/10 (round 12, final). Dream Loop's stall rule applied after the last architectural change (moving the reference encounter to the end of the bar, which fixed the mirrored composition) did not gain a full point, so iteration stopped there. The gap is structural: the target is photographic and the characters are stylized procedural figures. Composition, camera, bar geometry, brass, and the cobalt blue-hour backdrop now match the target's layout; skin, hair, cloth, facial realism, depth of field, and bokeh do not, and will not without rigged character assets and a post-processing pass. The judge's full lists are in the local `.dream-loop/` folder and are the natural backlog for a visual follow-up.
 
 ## Performance
 
