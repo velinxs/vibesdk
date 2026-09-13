@@ -121,7 +121,7 @@ export function CharacterModel(props: CharacterProps) {
 	const lipMat = useMemo(() => new THREE.MeshStandardMaterial({ color: '#8f4a4e', roughness: 0.5 }), []);
 	const browMat = useMemo(() => new THREE.MeshStandardMaterial({ color: character.appearance.hairColor, roughness: 0.9 }), [character.appearance.hairColor]);
 
-	const hipY = seated ? 0.62 : 0.95;
+	const hipY = seated ? 0.8 : 0.95;
 	const longHair = /long|shoulder/.test(character.appearance.hair);
 	const shortHair = /short|bob|cropped|swept|ponytail/.test(character.appearance.hair);
 	const dress = /dress/.test(character.appearance.outfit);

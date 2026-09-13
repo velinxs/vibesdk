@@ -47,7 +47,7 @@ function Bar({ quality }: LoungeProps) {
 			<mesh material={brassMat} position={[-BAR_CENTER.x, 0, -BAR_CENTER.z]}>
 				<tubeGeometry args={[railCurve, 64, 0.03, 12, false]} />
 			</mesh>
-			<mesh position={[0, 0.22, 0]} material={brassMat}>
+			<mesh position={[0, 0.22, 0]} rotation={[Math.PI / 2, 0, Math.PI / 2 - BAR_END]} material={brassMat}>
 				<torusGeometry args={[BAR_RADIUS + 0.78, 0.018, 8, segments, arc]} />
 			</mesh>
 			{/* Kick plate and inner counter */}
@@ -405,19 +405,19 @@ export function Lounge({ quality }: LoungeProps) {
 			<LoungeChair position={[-2.7, 0, 1.6]} rotationY={Math.PI * 1.45} />
 			<LoungeChair position={[-4.0, 0, 2.6]} rotationY={Math.PI * 0.05} />
 			<SideTable position={[-3.7, 0, 1.55]} />
-			<LoungeChair position={[-4.7, 0, -3.3]} rotationY={Math.PI * 0.3} />
-			<LoungeChair position={[-3.5, 0, -3.9]} rotationY={Math.PI * 0.05} />
-			<SideTable position={[-4.1, 0, -3.9]} />
+			<LoungeChair position={[-1.2, 0, 2.7]} rotationY={Math.PI * 1.1} />
+			<LoungeChair position={[-2.4, 0, 3.0]} rotationY={Math.PI * 0.9} />
+			<SideTable position={[-1.8, 0, 2.4]} />
 			<LoungeChair position={[3.9, 0, 1.9]} rotationY={Math.PI * 1.25} />
 			<LoungeChair position={[4.8, 0, 0.8]} rotationY={Math.PI * 0.85} />
 			<SideTable position={[4.6, 0, 1.75]} />
 			{/* Pendants over the bar */}
-			{[-36, -6, 24, 50].map((deg) => (
+			{[-28, 8, 42].map((deg) => (
 				<Pendant key={deg} position={onArc(BAR_RADIUS + 0.1, deg, 2.05)} quality={quality} />
 			))}
-			<Pendant position={[-3.4, 2.15, -2.4]} quality={quality} />
+			<Pendant position={[-3.6, 2.15, 1.6]} quality={quality} />
 			<Pendant position={[4.6, 2.15, -3.6]} quality={quality} />
-			<Plant position={[-5.1, 0, -3.9]} scale={1.2} />
+			<Plant position={[-2.3, 0, -4.2]} scale={1.1} />
 			<Plant position={[5.2, 0, 2.6]} />
 			<Plant position={[-5.1, 0, 2.8]} scale={0.9} />
 			<Plant position={[1.4, 0, -4.2]} scale={0.8} />
@@ -425,7 +425,7 @@ export function Lounge({ quality }: LoungeProps) {
 			<hemisphereLight color="#4a5a80" groundColor="#2a1c14" intensity={0.9} />
 			<directionalLight position={[0, 2.2, -9]} color="#6f8fd6" intensity={0.8} />
 			{/* Warm key over the bar guests, the way the target lights her face */}
-			<AimedSpot position={[-1.4, 2.9, -0.6]} target={[-2.24, 1.2, -1.9]} intensity={26} castShadow={quality === 'high'} />
+			<AimedSpot position={[-4.2, 2.8, -0.9]} target={[-3.68, 1.2, -2.94]} intensity={26} castShadow={quality === 'high'} />
 			<AimedSpot position={[2.4, 2.9, -0.8]} target={[3.56, 1.2, -2.8]} intensity={18} castShadow={false} />
 			<AimedSpot position={[4.2, 2.9, -2.4]} target={[4.9, 1.2, -3.75]} intensity={14} castShadow={false} />
 			<AimedSpot position={[-3.6, 2.9, 0.2]} target={[-4.6, 1.0, 0.9]} intensity={14} castShadow={false} />

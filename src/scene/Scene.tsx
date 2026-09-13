@@ -55,8 +55,8 @@ function FpsProbe({ onFps }: { onFps?: (fps: number) => void }) {
 }
 
 const GUESTS = [
-	{ id: 'guest-a', position: [-4.7, 0, -3.3] as [number, number, number], rotationY: Math.PI * 0.3, appearance: { hair: 'short', hairColor: '#2b1d14', skin: '#c99a76', outfit: 'shirt', outfitColor: '#2c3446', accentColor: '#000' } },
-	{ id: 'guest-b', position: [-3.5, 0, -3.9] as [number, number, number], rotationY: Math.PI * 0.05, appearance: { hair: 'long', hairColor: '#4a2e1a', skin: '#e8c8ae', outfit: 'dress', outfitColor: '#5c1f2e', accentColor: '#000' } },
+	{ id: 'guest-a', position: [-1.2, 0, 2.7] as [number, number, number], rotationY: Math.PI * 1.1, appearance: { hair: 'short', hairColor: '#2b1d14', skin: '#c99a76', outfit: 'shirt', outfitColor: '#2c3446', accentColor: '#000' } },
+	{ id: 'guest-b', position: [-2.4, 0, 3.0] as [number, number, number], rotationY: Math.PI * 0.9, appearance: { hair: 'long', hairColor: '#4a2e1a', skin: '#e8c8ae', outfit: 'dress', outfitColor: '#5c1f2e', accentColor: '#000' } },
 	{ id: 'guest-c', position: [3.9, 0, 1.9] as [number, number, number], rotationY: Math.PI * 1.25, appearance: { hair: 'cropped', hairColor: '#111', skin: '#7b4a30', outfit: 'shirt', outfitColor: '#1f2a24', accentColor: '#000' } },
 	{ id: 'dani', position: [-4.0, 0, 2.6] as [number, number, number], rotationY: Math.PI * 0.05, appearance: { hair: 'long', hairColor: '#1a1a1a', skin: '#d8a889', outfit: 'blazer', outfitColor: '#3a3a3a', accentColor: '#000' } },
 ];

@@ -34,15 +34,15 @@ export interface ConversationSeat {
 	yawOffset: number;
 }
 
-const STOOL_ANGLES = [-40, -26, -12, 2, 16, 30, 44];
+const STOOL_ANGLES = [-46, -30, -14, 2, 16, 30, 44];
 
 /**
  * Conversation framing follows the reference composition: the player stands
  * beside her stool, turned toward the bar, so the window is behind her and
  * the bar top runs off to one side.
  */
-const maraPos = onArc(STOOL_RADIUS, -26);
-const playerMaraPos = onArc(STOOL_RADIUS + 2.3, -37);
+const maraPos = onArc(STOOL_RADIUS, -46);
+const playerMaraPos: [number, number, number] = [-5.05, 0, -1.55];
 const camillePos = onArc(STOOL_RADIUS, 44);
 const playerCamillePos = onArc(STOOL_RADIUS + 2.3, 55);
 const elisePos: [number, number, number] = [4.9, 0, -3.75];
@@ -61,14 +61,14 @@ export const PLACEMENTS: Record<string, Placement> = {
 };
 
 export const CONVERSATION_SEATS: Record<string, ConversationSeat> = {
-	mara: { camera: [playerMaraPos[0], 1.3, playerMaraPos[2]], focus: [maraPos[0], 1.34, maraPos[2]], yawOffset: -0.12 },
-	camille: { camera: [playerCamillePos[0], 1.3, playerCamillePos[2]], focus: [camillePos[0], 1.34, camillePos[2]], yawOffset: 0.12 },
-	elise: { camera: [playerElisePos[0], 1.28, playerElisePos[2]], focus: [elisePos[0], 1.2, elisePos[2]], yawOffset: -0.1 },
-	sienna: { camera: [playerSiennaPos[0], 1.2, playerSiennaPos[2]], focus: [siennaPos[0], 1.08, siennaPos[2]], yawOffset: 0.1 },
+	mara: { camera: [playerMaraPos[0], 1.32, playerMaraPos[2]], focus: [maraPos[0], 1.42, maraPos[2]], yawOffset: -0.16 },
+	camille: { camera: [playerCamillePos[0], 1.3, playerCamillePos[2]], focus: [camillePos[0], 1.42, camillePos[2]], yawOffset: 0.12 },
+	elise: { camera: [playerElisePos[0], 1.28, playerElisePos[2]], focus: [elisePos[0], 1.4, elisePos[2]], yawOffset: -0.1 },
+	sienna: { camera: [playerSiennaPos[0], 1.2, playerSiennaPos[2]], focus: [siennaPos[0], 1.3, siennaPos[2]], yawOffset: 0.1 },
 };
 
 /** Stools face the bar, except the ones a principal has turned toward her visitor. */
-const TURNED_STOOLS: Record<number, number> = { [-26]: PLACEMENTS.mara.rotationY, [44]: PLACEMENTS.camille.rotationY };
+const TURNED_STOOLS: Record<number, number> = { [-46]: PLACEMENTS.mara.rotationY, [44]: PLACEMENTS.camille.rotationY };
 export const STOOLS = STOOL_ANGLES.map((deg) => ({ position: onArc(STOOL_RADIUS, deg), rotationY: TURNED_STOOLS[deg] ?? facing(onArc(STOOL_RADIUS, deg), onArc(BAR_RADIUS, deg)) }));
 
 export const SPAWN = { position: [0.6, 1.62, 2.4] as [number, number, number], yaw: 0, pitch: 0 };
