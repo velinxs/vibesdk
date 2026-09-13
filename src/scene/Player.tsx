@@ -110,9 +110,19 @@ export function PlayerControls({ mode, characterId, reducedMotion, walkRef, onLo
 		}
 	}, [mode]);
 
+	const setFov = (cam: THREE.PerspectiveCamera, target: number, k: number) => {
+		if (!cam.isPerspectiveCamera) return;
+		const next = THREE.MathUtils.lerp(cam.fov, target, Math.min(1, k));
+		if (Math.abs(next - cam.fov) > 0.01) {
+			cam.fov = next;
+			cam.updateProjectionMatrix();
+		}
+	};
+
 	useFrame((state, delta) => {
 		const dt = Math.min(delta, 0.05);
 		if (mode === 'lounge' || mode === 'menu') {
+			setFov(state.camera as THREE.PerspectiveCamera, 58, reducedMotion ? 1 : dt * 3);
 			if (mode === 'lounge') {
 				const speed = 1.7;
 				const forward = keys.current.has('KeyW') || keys.current.has('ArrowUp') || walkRef.current;
@@ -165,7 +175,9 @@ export function PlayerControls({ mode, characterId, reducedMotion, walkRef, onLo
 			focus.y += idle;
 			const m = new THREE.Matrix4().lookAt(camera.position, focus, new THREE.Vector3(0, 1, 0));
 			settleQuat.current.setFromRotationMatrix(m);
+			settleQuat.current.premultiply(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), seat.yawOffset));
 			camera.quaternion.slerpQuaternions(tr.fromQuat, settleQuat.current, ease);
+			setFov(state.camera as THREE.PerspectiveCamera, 42, ease);
 			const e = tmpEuler.current.setFromQuaternion(camera.quaternion, 'YXZ');
 			yaw.current = e.y;
 			pitch.current = e.x;

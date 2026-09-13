@@ -30,6 +30,8 @@ export interface Placement {
 export interface ConversationSeat {
 	camera: [number, number, number];
 	focus: [number, number, number];
+	/** Extra yaw after looking at the focus, so she sits off-center and the bar fills the frame. Negative turns right. */
+	yawOffset: number;
 }
 
 const STOOL_ANGLES = [-40, -26, -12, 2, 16, 30, 44];
@@ -40,9 +42,9 @@ const STOOL_ANGLES = [-40, -26, -12, 2, 16, 30, 44];
  * the bar top runs off to one side.
  */
 const maraPos = onArc(STOOL_RADIUS, -26);
-const playerMaraPos = onArc(STOOL_RADIUS + 1.9, -36);
+const playerMaraPos = onArc(STOOL_RADIUS + 2.3, -37);
 const camillePos = onArc(STOOL_RADIUS, 44);
-const playerCamillePos = onArc(STOOL_RADIUS + 1.9, 54);
+const playerCamillePos = onArc(STOOL_RADIUS + 2.3, 55);
 const elisePos: [number, number, number] = [4.9, 0, -3.75];
 const playerElisePos: [number, number, number] = [3.3, 0, -2.2];
 const siennaPos: [number, number, number] = [-4.6, 0, 0.9];
@@ -59,10 +61,10 @@ export const PLACEMENTS: Record<string, Placement> = {
 };
 
 export const CONVERSATION_SEATS: Record<string, ConversationSeat> = {
-	mara: { camera: [playerMaraPos[0], 1.28, playerMaraPos[2]], focus: [maraPos[0] + 0.12, 1.22, maraPos[2] - 0.1] },
-	camille: { camera: [playerCamillePos[0], 1.28, playerCamillePos[2]], focus: [camillePos[0] - 0.12, 1.22, camillePos[2] - 0.1] },
-	elise: { camera: [playerElisePos[0], 1.28, playerElisePos[2]], focus: [elisePos[0], 1.22, elisePos[2]] },
-	sienna: { camera: [playerSiennaPos[0], 1.2, playerSiennaPos[2]], focus: [siennaPos[0], 1.08, siennaPos[2]] },
+	mara: { camera: [playerMaraPos[0], 1.3, playerMaraPos[2]], focus: [maraPos[0], 1.34, maraPos[2]], yawOffset: -0.12 },
+	camille: { camera: [playerCamillePos[0], 1.3, playerCamillePos[2]], focus: [camillePos[0], 1.34, camillePos[2]], yawOffset: 0.12 },
+	elise: { camera: [playerElisePos[0], 1.28, playerElisePos[2]], focus: [elisePos[0], 1.2, elisePos[2]], yawOffset: -0.1 },
+	sienna: { camera: [playerSiennaPos[0], 1.2, playerSiennaPos[2]], focus: [siennaPos[0], 1.08, siennaPos[2]], yawOffset: 0.1 },
 };
 
 /** Stools face the bar, except the ones a principal has turned toward her visitor. */

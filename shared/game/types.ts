@@ -227,6 +227,8 @@ export interface EncounterNode {
 	alternatives: string[];
 	/** Authored fallback lines when no actor is available or its output is invalid. */
 	fallbackLines: Partial<Record<ReactionTag, string[]>>;
+	/** Authored lines for the supporting character who opens an NPC-initiated node. */
+	interjectionLines?: string[];
 	/** Rubric text hidden from the player in challenge mode. */
 	hidden?: string;
 	/** For rejection and ending nodes. */

@@ -20,6 +20,8 @@ interface StageText {
 	alternatives: string[];
 	fallback: Partial<Record<ReactionTag, string[]>>;
 	hidden?: string;
+	/** What the interrupting character says when the node opens. */
+	interjection?: string[];
 }
 
 interface RejectionText {
@@ -165,6 +167,7 @@ function node(
 		maxTurns: 3,
 		alternatives: text.alternatives,
 		fallbackLines: text.fallback,
+		interjectionLines: text.interjection,
 		hidden: text.hidden,
 		...extra,
 	};
@@ -401,6 +404,7 @@ const MARA: CharacterGraphSpec = {
 	},
 	interruptionEarly: {
 		situation: 'Dev, tall and cheerful, leans between them to ask where the bathroom is and whether this is the bar with the good negroni. He is not a threat. He is a man with questions.',
+		interjection: ['Sorry, sorry. Which way is the bathroom? And is this the place with the good negroni, or is that downstairs?'],
 		cues: ['Dev is friendly and oblivious.', 'Mara is watching how the player treats him.'],
 		strategies: ['Answer him like a person and return to Mara.', 'Include Mara in the joke without dismissing him.'],
 		alternatives: ['Point him to the bathroom and hand the thread back to Mara.', 'Ask Mara if the negroni is any good; make it a three-second moment.'],
@@ -413,6 +417,7 @@ const MARA: CharacterGraphSpec = {
 	},
 	interruption: {
 		situation: 'Priya arrives, protective, and puts a hand on Mara\'s shoulder: "We said one drink. Who is this?" She is evaluating the player on Mara\'s behalf.',
+		interjection: ['We said one drink. It has been two. Who is this?', 'There you are. We said one drink. Hi, who are you?'],
 		cues: ['Priya is protective, not hostile.', 'Mara is amused and waiting.', 'Priya asked a direct question: who is this?'],
 		strategies: ['Introduce yourself to Priya warmly.', 'Include her rather than talking past her.', 'Keep the thread with Mara alive with a callback.'],
 		alternatives: ['Say your name to Priya and ask hers.', 'Answer her question honestly: you are the guy who interrupted Mara\'s one drink.', 'Make a light joke that includes both of them.'],
@@ -598,6 +603,7 @@ const SIENNA: CharacterGraphSpec = {
 	},
 	interruptionEarly: {
 		situation: 'Dev leans in, loud and friendly, asks Sienna if she is "the girl from the thing" and asks the player if the owner is here tonight. He means well.',
+		interjection: ['Wait, are you the girl from the thing? You are. Hey man, is the owner here tonight? Big guy, beard?'],
 		cues: ['Dev is harmless.', 'Sienna is amused by him.', 'Brooke is not.'],
 		strategies: ['Be decent to him and hand the thread back.', 'Do not compete for the table.'],
 		alternatives: ['Answer Dev, introduce him to nobody, and return to Sienna\'s last sentence.', 'Let Sienna handle him and enjoy it.'],
@@ -610,6 +616,7 @@ const SIENNA: CharacterGraphSpec = {
 	},
 	interruption: {
 		situation: 'Brooke stands: "We are going. There is a thing at the Ace and the car is in four minutes." She looks at the player like a delay.',
+		interjection: ['Okay, we are going. There is a thing at the Ace and the car is in four minutes.', 'Car is in four minutes. Sienna. Four.'],
 		cues: ['Brooke has decided the night.', 'Sienna has not moved.', 'Four minutes is real.'],
 		strategies: ['Treat Brooke as a person with a plan.', 'Make it easy for Sienna to choose without a scene.', 'Propose something concrete inside four minutes.'],
 		alternatives: ['Ask Brooke what the thing at the Ace is, and mean it.', 'Tell Sienna you would like to see her again, and that Brooke should get her car.', 'Offer to walk them down.'],
@@ -710,6 +717,7 @@ const SIENNA: CharacterGraphSpec = {
 	},
 	biasInterruption: {
 		situation: 'Brooke cuts in, looking at the player: "Sorry, where are you even from? Like, originally. This is kind of a regulars thing. No offense." Sienna looks at Brooke, not at him. Dani winces.',
+		interjection: ['Sorry, where are you even from? Like, originally. This is kind of a regulars thing. No offense.'],
 		cues: ['Brooke made an assumption about who belongs here.', 'Sienna is watching Brooke, not you.', 'Dani is embarrassed on Brooke\'s behalf.', 'This is about Brooke.'],
 		strategies: ['Answer plainly without shrinking or attacking.', 'Keep your dignity; let Brooke own her question.', 'A clean exit here is a strong move, not a loss.'],
 		alternatives: ['Say where you are from like it is the least interesting fact about you, then return to Sienna.', 'Ask Brooke, lightly, what a regulars thing involves.', 'Tell Sienna it was good talking to her and leave without a jab.'],
@@ -807,6 +815,7 @@ const CAMILLE: CharacterGraphSpec = {
 	},
 	interruptionEarly: {
 		situation: 'Theo slides a drink over and says, dry: "This one asked for the good bourbon. That is either taste or a strategy." Camille laughs.',
+		interjection: ['This one asked for the good bourbon. That is either taste or a strategy.'],
 		cues: ['Theo is teasing, not sabotaging.', 'Camille is watching how you take it.'],
 		strategies: ['Take the joke.', 'Do not use Theo as a prop.'],
 		alternatives: ['Admit it was a strategy and it is working, then thank him.', 'Ask Theo which one he would have poured.'],
@@ -819,6 +828,7 @@ const CAMILLE: CharacterGraphSpec = {
 	},
 	interruption: {
 		situation: 'A man in a good suit stops to greet Camille, drops two names, and asks if she can introduce him to someone. He barely notices the player.',
+		interjection: ['Camille. Two seconds. Rafael is here, and I told him you would introduce me to the Hollis people. You know Hollis, right?'],
 		cues: ['He wants something from her.', 'Camille is polite and bored.', 'She is watching whether you compete or wait.'],
 		strategies: ['Do not compete.', 'Give her room, then pick the thread back up.', 'A dry observation about the ask can work.'],
 		alternatives: ['Wait, then ask her if that happens all night.', 'Say hello to him like a person and let her handle it.'],
@@ -1003,6 +1013,7 @@ const ELISE: CharacterGraphSpec = {
 	},
 	interruptionEarly: {
 		situation: 'Noor arrives, glowing from the dance floor, and loudly asks Elise if this is "a situation". Elise shrinks slightly.',
+		interjection: ['Is this a situation? Elise. Is this a situation?'],
 		cues: ['Noor is kind and loud.', 'Elise hates being a situation.', 'Handle Noor gently.'],
 		strategies: ['Be warm to Noor without amplifying her.', 'Give Elise an exit from the spotlight.'],
 		alternatives: ['Tell Noor it is a conversation about doors and let her be disappointed.', 'Ask Noor how the dance floor is, briefly.'],
@@ -1015,6 +1026,7 @@ const ELISE: CharacterGraphSpec = {
 	},
 	interruption: {
 		situation: 'Noor is back with two friends and wants Elise to come dance. They are watching the player with open curiosity. Elise looks trapped.',
+		interjection: ['Elise, come dance, everyone keeps asking where you went. Oh. Hi. Who is this?'],
 		cues: ['Elise is trapped between you and her friends.', 'The friends want a show.', 'Do not give them one.'],
 		strategies: ['Give Elise an easy choice.', 'Be friendly to the group without performing.', 'Do not make her decide in front of them.'],
 		alternatives: ['Tell Noor you will bring her back in five minutes, or tell Elise to go and that you will be here.', 'Say hi to the friends and turn the volume down.'],

@@ -244,11 +244,11 @@ export function CharacterModel(props: CharacterProps) {
 				<mesh position={[0, 0.02, 0]} material={dress ? clothMat : trouserMat} castShadow>
 					<capsuleGeometry args={[0.15, 0.12, 8, segs]} />
 				</mesh>
-				<mesh position={[0, 0.3, 0]} scale={[1, 1.15, 0.72]} material={clothMat} castShadow>
-					<capsuleGeometry args={[0.17, 0.26, 8, segs]} />
+				<mesh position={[0, 0.3, 0]} scale={[0.95, 1.15, 0.66]} material={clothMat} castShadow>
+					<capsuleGeometry args={[0.16, 0.26, 8, segs]} />
 				</mesh>
-				<mesh position={[0, 0.34, 0.06]} scale={[0.9, 0.6, 0.55]} material={clothMat}>
-					<sphereGeometry args={[0.16, segs, segs]} />
+				<mesh position={[0, 0.36, 0.05]} scale={[0.85, 0.5, 0.45]} material={clothMat}>
+					<sphereGeometry args={[0.15, segs, segs]} />
 				</mesh>
 				{/* Neck */}
 				<mesh position={[0, 0.58, 0]} material={skinMat}>

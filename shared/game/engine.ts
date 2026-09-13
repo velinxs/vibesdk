@@ -465,9 +465,10 @@ export function speakerName(id: string): string {
 	return CHARACTERS[id]?.name ?? SUPPORTING_NAMES[id] ?? id;
 }
 
-function fallbackFor(node: EncounterNode, reaction: ReactionTag, rng: number): { line: string; rng: number } {
+function fallbackFor(node: EncounterNode, reaction: ReactionTag, rng: number, avoid?: string): { line: string; rng: number } {
 	const pool = node.fallbackLines[reaction] ?? Object.values(node.fallbackLines)[0] ?? ['...'];
-	const pick = rngPick(rng, pool);
+	const candidates = pool.length > 1 && avoid ? pool.filter((line) => line !== avoid) : pool;
+	const pick = rngPick(rng, candidates.length > 0 ? candidates : pool);
 	return { line: pick.item, rng: pick.next };
 }
 
@@ -769,14 +770,16 @@ export function applyTurn(
 	const reaction = closed ? pickReaction('closed', nextNode, nextNode.kind === 'ending' ? 'accepting' : 'closing') : pickReaction(band, node, reactionOverride);
 
 	// Fallback lines are chosen deterministically so a failed actor call stays reproducible.
-	const fallback = fallbackFor(transitioned && nextNode.npcInitiates ? nextNode : node, transitioned && nextNode.npcInitiates ? pickReaction(band, nextNode, nextNode.kind === 'interruption' ? 'interrupted' : nextNode.kind === 'boundary' ? 'boundary' : reaction) : reaction, rng);
+	const lastLine = encounter.history.at(-1)?.npcLine;
+	const fallback = fallbackFor(transitioned && nextNode.npcInitiates ? nextNode : node, transitioned && nextNode.npcInitiates ? pickReaction(band, nextNode, nextNode.kind === 'interruption' ? 'interrupted' : nextNode.kind === 'boundary' ? 'boundary' : reaction) : reaction, rng, lastLine);
 	rng = fallback.rng;
 	const interjectionSpeaker = transitioned ? supportingSpeaker(nextNode, character.id) : null;
 	let fallbackInterjection: Interjection | null = null;
 	if (interjectionSpeaker) {
-		const interjectionFallback = fallbackFor(nextNode, nextNode.attribution === 'npc_bias' ? 'biased_dismissal' : 'interrupted', rng);
-		rng = interjectionFallback.rng;
-		fallbackInterjection = { speakerId: interjectionSpeaker, speakerName: speakerName(interjectionSpeaker), line: interjectionFallback.line };
+		const pool = nextNode.interjectionLines ?? nextNode.fallbackLines[nextNode.attribution === 'npc_bias' ? 'biased_dismissal' : 'interrupted'] ?? ['...'];
+		const pick = rngPick(rng, pool);
+		rng = pick.next;
+		fallbackInterjection = { speakerId: interjectionSpeaker, speakerName: speakerName(interjectionSpeaker), line: pick.item };
 	}
 
 	const coach = coachLines(events, rng, run.coachMuted);

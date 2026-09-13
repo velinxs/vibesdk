@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 import * as THREE from 'three';
 import { Environment, Lightformer } from '@react-three/drei';
 import { BAR_CENTER, BAR_END, BAR_RADIUS, BAR_START, GLASS_Z, ROOM, STOOLS, onArc } from './layout';
@@ -251,7 +251,7 @@ function makeBokeh(count: number): { positions: Float32Array; colors: Float32Arr
 }
 
 function GlassWall({ quality }: LoungeProps) {
-	const skyline = useLoungeTexture('/textures/skyline2.jpg', 1, { window: [1, 0.5, 0, 0.5] });
+	const skyline = useLoungeTexture('/textures/skyline3.jpg', 1, { window: [1, 0.5, 0, 0.28] });
 	const sprite = useMemo(() => bokehSprite(), []);
 	const bokeh = useMemo(() => makeBokeh(140), []);
 	const mullions = useMemo(() => {
@@ -293,6 +293,23 @@ function GlassWall({ quality }: LoungeProps) {
 				<boxGeometry args={[ROOM.maxX - ROOM.minX + 2, 0.1, 0.14]} />
 				<meshStandardMaterial color="#0c0d10" roughness={0.6} metalness={0.4} />
 			</mesh>
+		</group>
+	);
+}
+
+/** A spotlight whose target lives in the scene graph so its aim actually updates. */
+function AimedSpot({ position, target, intensity, castShadow }: { position: [number, number, number]; target: [number, number, number]; intensity: number; castShadow: boolean }) {
+	const light = useRef<THREE.SpotLight>(null);
+	const aim = useMemo(() => new THREE.Object3D(), []);
+	useEffect(() => {
+		if (light.current) {
+			light.current.target = aim;
+		}
+	}, [aim]);
+	return (
+		<group>
+			<spotLight ref={light} position={position} color="#ffc27a" intensity={intensity} angle={0.75} penumbra={0.7} distance={8} decay={2} castShadow={castShadow} shadow-bias={-0.0006} shadow-mapSize={[1024, 1024]} />
+			<primitive object={aim} position={target} />
 		</group>
 	);
 }
@@ -408,8 +425,10 @@ export function Lounge({ quality }: LoungeProps) {
 			<hemisphereLight color="#4a5a80" groundColor="#2a1c14" intensity={0.9} />
 			<directionalLight position={[0, 2.2, -9]} color="#6f8fd6" intensity={0.8} />
 			{/* Warm key over the bar guests, the way the target lights her face */}
-			<spotLight position={[-1.2, 2.9, -1.4]} target-position={[-2.0, 1.2, -2.4]} color="#ffc27a" intensity={22} angle={0.7} penumbra={0.6} distance={7} decay={2} castShadow={quality === 'high'} shadow-bias={-0.0006} />
-			<spotLight position={[2.6, 2.9, -1.6]} color="#ffc27a" intensity={16} angle={0.8} penumbra={0.6} distance={7} decay={2} />
+			<AimedSpot position={[-1.4, 2.9, -0.6]} target={[-2.24, 1.2, -1.9]} intensity={26} castShadow={quality === 'high'} />
+			<AimedSpot position={[2.4, 2.9, -0.8]} target={[3.56, 1.2, -2.8]} intensity={18} castShadow={false} />
+			<AimedSpot position={[4.2, 2.9, -2.4]} target={[4.9, 1.2, -3.75]} intensity={14} castShadow={false} />
+			<AimedSpot position={[-3.6, 2.9, 0.2]} target={[-4.6, 1.0, 0.9]} intensity={14} castShadow={false} />
 		</group>
 	);
 }
